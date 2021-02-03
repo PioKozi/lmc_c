@@ -1,12 +1,12 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 const int ramsize = 99;
 const int maxsize = 30;
 struct entry {
-    char str[maxsize];
-    int   n;
+    char* str;
+    int  n;
 };
 // allow people to use variable names, ugly solution but should work
 struct entry variables[ramsize] = {};  // map var name to var location
@@ -43,30 +43,10 @@ int loc_for_var(char *varname)
 
 void load_data(int *ram)
 {
-    FILE *  file = fopen("./instructions", "r");
-    int     i    = 0;  // variable location
-    char *  line = NULL;
-    size_t  len  = 0;
-    ssize_t nread;
-    while ((nread = getline(&line, &len, file) != -1)) {
-        char var_name[maxsize];
-        sscanf(line, "%s", var_name);
-        if (num_for_instr(var_name) == -1) {
-            strcpy(variables[i].str, var_name);
-            variables[i].n   = i;
-            // TODO put the value of the variable into ram
-        }
-        i++;
-    }
-    free(line);
-    fclose(file);
     return;
 }
 
-void load_instructions()
-{
-
-}
+void load_instructions() {}
 
 int main()
 {
@@ -78,5 +58,6 @@ int main()
     /* int   mdr = 0;       // memory data register */
     /* char *cir;           // current instruction register */
     load_data(ram);
+    /* printf("%s %d\n", variables[0].str, variables[0].n); */
     return 0;
 }
