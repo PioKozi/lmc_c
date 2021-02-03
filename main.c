@@ -3,6 +3,7 @@
 #include <string.h>
 
 const int ramsize = 99;
+int ram[ramsize];  // array acts as main memory
 struct entry {
     char *str;
     int   n;
@@ -40,22 +41,30 @@ int loc_for_pointer(char *varname)
     return -1;
 }
 
-void load_data(int *ram)
+void find_pointers()
 {
-    return;
+    FILE *  inst_fd = fopen("./instructions", "r");
+    char *  inst    = NULL;
+    size_t  n       = 0;
+    ssize_t nread;
+    int     i = 0;
+    while ((nread = getline(&inst, &n, inst_fd)) != -1) {
+        char *token = strtok(inst, " ");
+        if (code_for_instr(token) == -1) {
+            pointers[i].str = malloc(sizeof token);
+            strcpy(pointers[i].str, token);
+            pointers[i].n = i;
+        }
+        i++;
+    }
+    free(inst);
+    fclose(inst_fd);
 }
 
 void load_instructions() {}
 
 int main()
 {
-    /* CPU REGISTERS */
-    int ram[ramsize];  // array acts as main memory
-    /* int   acc = 0;       // acculumator */
-    /* int   pc  = 0;       // program counter */
-    /* int   mar = 0;       // memory address register */
-    /* int   mdr = 0;       // memory data register */
-    /* char *cir;           // current instruction register */
-    load_data(ram);
+    find_pointers();
     return 0;
 }
