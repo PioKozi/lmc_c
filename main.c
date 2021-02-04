@@ -42,10 +42,9 @@ int loc_for_pointer(char *name, struct entry *pointers)
     return -1;
 }
 
-// load pointers into pointers structure
-void find_pointers(struct entry *pointers)
+// load pointers into pointers structure using file inst_fd
+void find_pointers(struct entry *pointers, FILE * inst_fd)
 {
-    FILE *  inst_fd = fopen("./instructions", "r");
     char *  inst    = NULL;
     size_t  n       = 0;
     ssize_t nread;
@@ -60,16 +59,17 @@ void find_pointers(struct entry *pointers)
         i++;
     }
     free(inst);
-    fclose(inst_fd);
 }
 
 void load_instructions() {}
 
 int main()
 {
+    FILE *  inst_fd = fopen("./instructions", "r");
     int ram[RAMSIZE];  // array acts as main memory
     // map pointer/var name to pointer location/line
     struct entry pointers[RAMSIZE];
-    find_pointers(pointers);
+    find_pointers(pointers, inst_fd);
+    fclose(inst_fd);
     return 0;
 }
