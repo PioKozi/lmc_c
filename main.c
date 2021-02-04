@@ -43,10 +43,10 @@ int loc_for_pointer(char *name, struct entry *pointers)
 }
 
 // load pointers into pointers structure using file inst_fd
-void find_pointers(struct entry *pointers, FILE * inst_fd)
+void find_pointers(struct entry *pointers, FILE *inst_fd)
 {
-    char *  inst    = NULL;
-    size_t  n       = 0;
+    char *  inst = NULL;
+    size_t  n    = 0;
     ssize_t nread;
     int     i = 0;
     while ((nread = getline(&inst, &n, inst_fd)) != -1) {
@@ -63,10 +63,20 @@ void find_pointers(struct entry *pointers, FILE * inst_fd)
 
 void load_instructions() {}
 
-int main()
+int main(int argc, char *argv[])
 {
-    FILE *  inst_fd = fopen("./instructions", "r");
-    int ram[RAMSIZE];  // array acts as main memory
+    char *filename = NULL;
+    if (argc > 1) {
+        filename = malloc(sizeof argv[1]);
+        strcpy(filename, argv[1]);
+    } else {
+        printf("file to read: ");
+        size_t len = 0;
+        getline(&filename, &len, stdin);
+        sscanf(filename, "%s", filename);
+    }
+    FILE *inst_fd = fopen(filename, "r");
+    int   ram[RAMSIZE];  // array acts as main memory
     // map pointer/var name to pointer location/line
     struct entry pointers[RAMSIZE];
     find_pointers(pointers, inst_fd);
