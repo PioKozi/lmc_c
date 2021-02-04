@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-const int ramsize = 99;
+#define RAMSIZE 99
+
 struct entry {
     char *str;
     int   n;
 };
+
 const struct entry instructions[] = {
     {"LDA", 5},    // load
     {"STA", 3},    // store
@@ -20,23 +22,27 @@ const struct entry instructions[] = {
     {"BRA", 6},    // always branch
     {"DAT", 0},    // data/variable
 };
-// return int if found, -1 if not found
+
+// return opcode if found, -1 if not found
 int code_for_instr(char *instr)
 {
-    int n_instructions = sizeof(instructions) / sizeof(struct entry);
+    static const int n_instructions = 11;  // will not change
     for (int i = 0; i < n_instructions; i++)
         if (strcmp(instr, instructions[i].str) == 0)
             return instructions[i].n;
     return -1;
 }
-int loc_for_pointer(char *varname, struct entry *pointers)
+
+// return line/location for data/instruction pointed to by name, -1 if not found
+int loc_for_pointer(char *name, struct entry *pointers)
 {
-    for (int i = 0; i < ramsize; i++)
-        if (strcmp(varname, pointers[i].str) == 0)
+    for (int i = 0; i < RAMSIZE; i++)
+        if (strcmp(name, pointers[i].str) == 0)
             return pointers[i].n;
     return -1;
 }
 
+// load pointers into pointers structure
 void find_pointers(struct entry *pointers)
 {
     FILE *  inst_fd = fopen("./instructions", "r");
@@ -61,11 +67,9 @@ void load_instructions() {}
 
 int main()
 {
-    int ram[ramsize];  // array acts as main memory
+    int ram[RAMSIZE];  // array acts as main memory
     // map pointer/var name to pointer location/line
-    struct entry pointers[ramsize];
+    struct entry pointers[RAMSIZE];
     find_pointers(pointers);
-    printf("%s %d\n", pointers[0].str, pointers[0].n);
-    printf("%s %d\n", pointers[1].str, pointers[1].n);
     return 0;
 }
