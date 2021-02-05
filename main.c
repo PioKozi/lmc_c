@@ -5,7 +5,7 @@
 #define RAMSIZE 99
 
 struct entry {
-    char *str;
+    char* str;
     int   n;
 };
 
@@ -24,7 +24,7 @@ const struct entry instructions[] = {
 };
 
 // return opcode if found, -1 if not found
-int code_for_instr(char *instr)
+int code_for_instr(char* instr)
 {
     static const int n_instructions = 11;  // will not change
     for (int i = 0; i < n_instructions; i++)
@@ -34,7 +34,7 @@ int code_for_instr(char *instr)
 }
 
 // return line/location for data/instruction pointed to by name, -1 if not found
-int loc_for_pointer(char *name, struct entry *pointers)
+int loc_for_pointer(char* name, struct entry* pointers)
 {
     for (int i = 0; i < RAMSIZE; i++)
         if (strcmp(name, pointers[i].str) == 0)
@@ -43,14 +43,14 @@ int loc_for_pointer(char *name, struct entry *pointers)
 }
 
 // load pointers into pointers structure using file inst_fd
-void find_pointers(struct entry *pointers, FILE *inst_fd)
+void find_pointers(struct entry* pointers, FILE* inst_fd)
 {
-    char *  inst = NULL;
+    char*   inst = NULL;
     size_t  n    = 0;
     ssize_t nread;
     int     i = 0;
     while ((nread = getline(&inst, &n, inst_fd)) != -1) {
-        char *token = strtok(inst, " ");
+        char* token = strtok(inst, " ");
         if (code_for_instr(token) == -1) {
             pointers[i].str = malloc(sizeof token);
             strcpy(pointers[i].str, token);
@@ -63,9 +63,9 @@ void find_pointers(struct entry *pointers, FILE *inst_fd)
 
 void load_instructions() {}
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    char *filename = NULL;
+    char* filename = NULL;
     if (argc > 1) {
         filename = malloc(sizeof argv[1]);
         strcpy(filename, argv[1]);
@@ -75,8 +75,8 @@ int main(int argc, char *argv[])
         getline(&filename, &len, stdin);
         sscanf(filename, "%s", filename);
     }
-    FILE *inst_fd = fopen(filename, "r");
-    int   ram[RAMSIZE];  // array acts as main memory
+    FILE* inst_fd = fopen(filename, "r");
+    int   ram[RAMSIZE] = {0};  // array acts as main memory
     // map pointer/var name to pointer location/line
     struct entry pointers[RAMSIZE];
     find_pointers(pointers, inst_fd);
