@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,11 +43,22 @@ int loc_for_pointer(char* name, struct entry* pointers)
     return -1;
 }
 
-// load pointers into pointers structure using file inst_fd
-void find_pointers(struct entry* pointers, FILE* inst_fd)
+// return 1 if string is numeric, 0 if it is not.
+// Only considers positive integers.
+int is_numeric(char* str)
 {
-    char*   inst = NULL;
-    size_t  n    = 0;
+    for (int i = 0; i < strlen(str); i++)
+        if (!isdigit(str[i]))
+            return 0;
+    return 1;
+}
+
+// load pointers into pointers structure using file inst_fd
+void find_pointers(struct entry* pointers, char* filename)
+{
+    FILE*   inst_fd = fopen(filename, "r");
+    char*   inst    = NULL;
+    size_t  n       = 0;
     ssize_t nread;
     int     i = 0;
     while ((nread = getline(&inst, &n, inst_fd)) != -1) {
@@ -58,10 +70,45 @@ void find_pointers(struct entry* pointers, FILE* inst_fd)
         }
         i++;
     }
+    fclose(inst_fd);
     free(inst);
 }
 
-void load_instructions() {}
+void load_instructions(int* ram, char* filename, struct entry* pointers)
+{
+    FILE*   inst_fd = fopen(filename, "r");
+    char*   inst    = NULL;
+    char*   token   = NULL;
+    size_t  n       = 0;
+    ssize_t nread;
+    int     location = 0;
+    while ((nread = getline(&inst, &n, inst_fd)) != -1) {
+        int opval                   = 0;
+        token                       = strtok(inst, " ");
+        token[strcspn(token, "\n")] = 0;  // remove newline
+        if (code_for_instr(token) == -1)  // check named/pointed-to line
+            token = strtok(NULL, " ");    // next token, instr
+        int opcode = code_for_instr(token);
+        if (opcode == 901 || opcode == 902)
+            opval += opcode;
+        else
+            opval += 100 * opcode;
+        token = strtok(NULL, " ");  // next token, "mailbox"
+        if (token != 0x0) {
+            token[strcspn(token, "\n")] = 0;  // remove newline
+            if (is_numeric(token) == 1) {
+                int tmp;
+                sscanf(token, "%d", &tmp);
+                opval += tmp;
+            } else
+                opval += loc_for_pointer(token, pointers);
+        }
+        ram[location] = opval;
+        location++;
+    }
+    fclose(inst_fd);
+    return;
+}
 
 int main(int argc, char* argv[])
 {
@@ -75,11 +122,10 @@ int main(int argc, char* argv[])
         getline(&filename, &len, stdin);
         sscanf(filename, "%s", filename);
     }
-    FILE* inst_fd = fopen(filename, "r");
-    int   ram[RAMSIZE] = {0};  // array acts as main memory
+    int ram[RAMSIZE] = {0};  // array acts as main memory
     // map pointer/var name to pointer location/line
     struct entry pointers[RAMSIZE];
-    find_pointers(pointers, inst_fd);
-    fclose(inst_fd);
+    find_pointers(pointers, filename);
+    load_instructions(ram, filename, pointers);
     return 0;
 }
