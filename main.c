@@ -29,8 +29,7 @@ int code_for_instr(char* instr)
 {
     static const int n_instructions = 11;  // will not change
     for (int i = 0; i < n_instructions; i++)
-        if (strcmp(instr, instructions[i].str) == 0)
-            return instructions[i].n;
+        if (strcmp(instr, instructions[i].str) == 0) return instructions[i].n;
     return -1;
 }
 
@@ -38,8 +37,7 @@ int code_for_instr(char* instr)
 int loc_for_pointer(char* name, struct entry* pointers)
 {
     for (int i = 0; i < RAMSIZE; i++)
-        if (strcmp(name, pointers[i].str) == 0)
-            return pointers[i].n;
+        if (strcmp(name, pointers[i].str) == 0) return pointers[i].n;
     return -1;
 }
 
@@ -48,8 +46,7 @@ int loc_for_pointer(char* name, struct entry* pointers)
 int is_numeric(char* str)
 {
     for (int i = 0; i < strlen(str); i++)
-        if (!isdigit(str[i]))
-            return 0;
+        if (!isdigit(str[i])) return 0;
     return 1;
 }
 
@@ -111,14 +108,47 @@ void load_instructions(int* ram, char* filename, struct entry* pointers)
     return;
 }
 
-void add(int* acc, int* cir, int* mar, int* mdr, int* ram);
-void sub(int* acc, int* cir, int* mar, int* mdr, int* ram);
-void store(int* acc, int* cir, int* mar, int* mdr, int* ram);
-void load(int* acc, int* cir, int* mar, int* mdr, int* ram);
-void branch(int* pc, int* cir);
-void branch_if_zero(int* pc, int* cir, int* acc);
-void branch_if_pos(int* pc, int* cir, int* acc);
-void io(int* acc, int* cir);
+void add(int* acc, int* cir, int* mar, int* mdr, int* ram)
+{
+    *mar = *cir % 100;
+    *mdr = ram[*mar];
+    *acc += *mdr;
+}
+void sub(int* acc, int* cir, int* mar, int* mdr, int* ram)
+{
+    *mar = *cir % 100;
+    *mdr = ram[*mar];
+    *acc -= *mdr;
+}
+void store(int* acc, int* cir, int* mar, int* mdr, int* ram)
+{
+    *mar      = *cir % 100;
+    *mdr      = *acc;
+    ram[*mar] = *mdr;
+}
+void load(int* acc, int* cir, int* mar, int* mdr, int* ram)
+{
+    *mar = *cir % 100;
+    *mdr = ram[*mar];
+    *acc = *mdr;
+}
+void branch(int* pc, int* cir) { *pc = *cir % 100; }
+void branch_if_zero(int* pc, int* cir, int* acc)
+{
+    if (*acc == 0) *pc = *cir % 100;
+}
+void branch_if_pos(int* pc, int* cir, int* acc)
+{
+    if (*acc >= 0) *pc = *cir % 100;
+}
+void io(int* acc, int* cir)
+{
+    switch (*cir % 100) {
+    case 1: scanf("%d", acc); break;
+    case 2: printf("%d\n", *acc); break;
+    default: printf("bad instruction %d\n", *cir);
+    }
+}
 
 void cycle(int* ram)
 {
@@ -167,6 +197,6 @@ int main(int argc, char* argv[])
     struct entry pointers[RAMSIZE];
     find_pointers(pointers, filename);
     load_instructions(ram, filename, pointers);
-    cycle(&ram);
+    cycle(ram);
     return 0;
 }
