@@ -107,7 +107,47 @@ void load_instructions(int* ram, char* filename, struct entry* pointers)
         location++;
     }
     fclose(inst_fd);
+    free(inst);
     return;
+}
+
+void add(int* acc, int* cir, int* mar, int* mdr, int* ram);
+void sub(int* acc, int* cir, int* mar, int* mdr, int* ram);
+void store(int* acc, int* cir, int* mar, int* mdr, int* ram);
+void load(int* acc, int* cir, int* mar, int* mdr, int* ram);
+void branch(int* pc, int* cir);
+void branch_if_zero(int* pc, int* cir, int* acc);
+void branch_if_pos(int* pc, int* cir, int* acc);
+void io(int* acc, int* cir);
+
+void cycle(int* ram)
+{
+    // registers involved
+    // included just because of what the program *should* be
+    int pc  = 0;
+    int mar = 0;
+    int mdr = 0;
+    int cir = 0;
+    int acc = 0;
+    while (1) {  // break must be explicit (reason same as registers)
+        mar = pc;
+        pc++;
+        mdr = ram[mar];
+        cir = mdr;
+        // clang-format off
+        switch (cir / 100) {
+        case 0: if (cir == 0) return;  // if HLT, end cycle, else (DAT) ignore
+        case 1: add(&acc, &cir, &mar, &mdr, ram); break;
+        case 2: sub(&acc, &cir, &mar, &mdr, ram); break;
+        case 3: store(&acc, &cir, &mar, &mdr, ram); break;
+        case 5: load(&acc, &cir, &mar, &mdr, ram); break;
+        case 6: branch(&pc, &cir); break;
+        case 7: branch_if_zero(&pc, &cir, &acc); break;
+        case 8: branch_if_pos(&pc, &cir, &acc); break;
+        case 9: io(&acc, &cir); break;
+        }
+        // clang-format on
+    }
 }
 
 int main(int argc, char* argv[])
@@ -127,5 +167,6 @@ int main(int argc, char* argv[])
     struct entry pointers[RAMSIZE];
     find_pointers(pointers, filename);
     load_instructions(ram, filename, pointers);
+    cycle(&ram);
     return 0;
 }
