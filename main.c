@@ -11,16 +11,16 @@ struct entry {
 };
 
 const struct entry instructions[] = {
-    {"LDA", 5},    // load
-    {"STA", 3},    // store
     {"ADD", 1},    // add
     {"SUB", 2},    // subtract
+    {"STA", 3},    // store
+    {"LDA", 5},    // load
+    {"BRA", 6},    // always branch
+    {"BRZ", 7},    // branch if zero
+    {"BRP", 8},    // branch if positive
     {"INP", 901},  // input
     {"OUT", 902},  // output
     {"END", 0},    // halt
-    {"BRZ", 7},    // branch if zero
-    {"BRP", 8},    // branch if positive
-    {"BRA", 6},    // always branch
     {"DAT", 0},    // data/variable
 };
 
