@@ -71,7 +71,8 @@ void find_pointers(struct entry* pointers, char* filename)
     free(inst);
 }
 
-void load_instructions(int* ram, char* filename, struct entry* pointers)
+// return 0 on success, return -1 on fail
+int load_instructions(int* ram, char* filename, struct entry* pointers)
 {
     FILE*   inst_fd = fopen(filename, "r");
     char*   inst    = NULL;
@@ -85,27 +86,41 @@ void load_instructions(int* ram, char* filename, struct entry* pointers)
         token[strcspn(token, "\n")] = 0;  // remove newline
         if (code_for_instr(token) == -1)  // check named/pointed-to line
             token = strtok(NULL, " ");    // next token, instr
+        if (token == NULL) {  // there is only a pointer and no instruction
+            printf("line %d: no/bad instruction\n", location);
+            return -1;
+        }
         int opcode = code_for_instr(token);
+        if (opcode == -1) {  // invalid instruction
+            printf("line %d: bad instruction, %s\n", location, token);
+            return -1;
+        }
         if (opcode == 901 || opcode == 902)
             opval += opcode;
         else
             opval += 100 * opcode;
         token = strtok(NULL, " ");  // next token, "mailbox"
-        if (token != 0x0) {
+        if (token != NULL) {
             token[strcspn(token, "\n")] = 0;  // remove newline
             if (is_numeric(token) == 1) {
                 int tmp;
                 sscanf(token, "%d", &tmp);
                 opval += tmp;
-            } else
-                opval += loc_for_pointer(token, pointers);
+            } else {
+                int pointer_loc = loc_for_pointer(token, pointers);
+                if (pointer_loc == -1) {
+                    printf("line %d: bad pointer, %s\n", location, token);
+                    return -1;
+                } else
+                    opval += pointer_loc;
+            }
         }
         ram[location] = opval;
         location++;
     }
     fclose(inst_fd);
     free(inst);
-    return;
+    return 0;
 }
 
 void add(int* acc, int* cir, int* mar, int* mdr, int* ram)
@@ -196,7 +211,7 @@ int main(int argc, char* argv[])
     // map pointer/var name to pointer location/line
     struct entry pointers[RAMSIZE];
     find_pointers(pointers, filename);
-    load_instructions(ram, filename, pointers);
-    cycle(ram);
+    int ret = load_instructions(ram, filename, pointers);
+    if (ret == 0) cycle(ram);  // if loading was successful
     return 0;
 }
